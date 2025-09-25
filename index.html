@@ -5,14 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>שעון דיגיטלי לנץ</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<!-- Changed font to Space Mono for true monospace digits -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
     --bg:#0b1220;
     --accent:#00ffcc;
     --muted:#9fb4c4;
-    --digital-font: 'Orbitron', sans-serif;
+    /* Changed digital font to Space Mono */
+    --digital-font: 'Space Mono', monospace;
   }
   body{
     margin:0;
@@ -30,6 +32,7 @@
   }
 
   /* --- Styles for elements displaying time/numbers to ensure fixed width digits --- */
+  /* This class is still good practice, though less critical with a monospace font */
   .fixed-width-digits {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
