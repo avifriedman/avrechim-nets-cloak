@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>שעון דיגיטלי לנץ</title>
 
-<!-- Changed font to Roboto Mono for a clean, monospace zero -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
@@ -13,90 +12,84 @@
     --bg:#0b1220;
     --accent:#00ffcc;
     --muted:#9fb4c4;
-    /* Changed digital font to Roboto Mono */
     --digital-font: 'Roboto Mono', monospace;
   }
   body{
     margin:0;
-    min-height:100vh; /* Make sure body takes full viewport height */
+    min-height:100vh;
     display:flex;
-    flex-direction: column; /* Allow vertical stacking of content */
+    flex-direction: column;
     align-items:center;
     justify-content:center;
     background:linear-gradient(180deg,#031026 0%, #071629 100%);
     color:var(--accent);
     font-family:var(--digital-font);
-    direction:rtl; /* Ensure RTL for Hebrew */
-    text-align: center; /* Center text within the body */
-    overflow: hidden; /* Prevent scrollbars if content slightly overflows */
+    direction:rtl;
+    text-align: center;
+    overflow: hidden;
   }
 
-  /* --- Styles for elements displaying time/numbers to ensure fixed width digits --- */
-  /* This class is still good practice, though less critical with a monospace font */
   .fixed-width-digits {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }
 
-  /* --- Default Clock Display Styles --- */
   #defaultDisplay {
-    display: flex; /* Initially set to flex for centering */
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%; /* Fill available space */
-  }
-
-  #mainDisplay {
-    font-size: 15vw; /* Large, responsive font size for main clock */
-    letter-spacing: 0.05em; /* Slightly spaced letters for digital feel */
-    line-height: 1; /* Tight line height */
-    color: var(--accent);
-    text-shadow: 0 0 15px rgba(0, 255, 204, 0.5); /* Subtle glow */
-  }
-
-  #subDisplay {
-    font-size: 3vw; /* Smaller, responsive font size for sub-info */
-    color: var(--muted);
-    margin-top: 2vh; /* Relative margin from main clock */
-  }
-
-  /* --- Countdown Display Styles --- */
-  #countdownArea {
-    display: none; /* Hidden by default */
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
-    color: #fff; /* Brighter white for countdown text */
+  }
+
+  #mainDisplay {
+    font-size: 15vw;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+  }
+
+  #subDisplay {
+    font-size: 3vw;
+    color: var(--muted);
+    margin-top: 2vh;
+  }
+
+  #countdownArea {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #fff;
   }
 
   #countdown {
-    font-size: 15vw; /* Same large size for countdown text */
+    font-size: 15vw;
     letter-spacing: 0.05em;
     line-height: 1;
-    background: rgba(0,255,204,0.08); /* Slight background for contrast */
-    padding: 0.5em 1em; /* Adjust padding for better look */
+    background: rgba(0,255,204,0.08);
+    padding: 0.5em 1em;
     border-radius: 12px;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.7); /* Brighter glow for countdown */
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
   }
 
   .countdown-info {
-    margin-top: 3vh; /* Relative margin from countdown */
+    margin-top: 3vh;
     font-size: 3vw;
     color: var(--muted);
-    line-height: 1.5; /* Spacing for info lines */
+    line-height: 1.5;
   }
   .countdown-info div {
-    margin: 0.5vh 0; /* Small vertical margin between info lines */
+    margin: 0.5vh 0;
   }
 
-  /* --- Responsive Adjustments for Smaller Screens --- */
   @media(max-width:768px){
     #mainDisplay, #countdown {
-      font-size: 20vw; /* Larger font on smaller screens relative to viewport */
+      font-size: 20vw;
     }
     #subDisplay, .countdown-info {
       font-size: 4.5vw;
@@ -113,13 +106,11 @@
 </style>
 </head>
 <body>
-  <!-- Container for the default clock display -->
   <div id="defaultDisplay">
     <div id="mainDisplay" class="fixed-width-digits">--:--:--</div>
     <div id="subDisplay">--</div>
   </div>
 
-  <!-- Container for the countdown display (initially hidden) -->
   <div id="countdownArea">
     <div id="countdown" class="fixed-width-digits">00:00:00</div>
     <div class="countdown-info">
@@ -130,44 +121,57 @@
 
 <script>
 const CSV_PATH = './sunrise_times.csv';
+const VERSION_FILE_PATH = './version.json'; // Path to the version indicator file
 const DEFAULT_SUNRISE = '06:00:00';
+const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000; // Check for new version every 5 minutes
+
 let sunriseMap = new Map(); // 'YYYY-MM-DD' -> { sunrise:'HH:MM:SS', hebrew:'...' }
+let currentDataVersion = 0; // Stores the timestamp of the currently loaded data
 
 function z(n,len=2){return String(n).padStart(len,'0');}
 
 async function loadCsv(){
   try{
-    const res = await fetch(CSV_PATH);
+    // Adding a cache-busting parameter to ensure the latest CSV is fetched
+    const res = await fetch(CSV_PATH + '?cache=' + new Date().getTime());
     if(!res.ok) throw new Error('CSV fetch error: ' + res.statusText);
     const txt = await res.text();
     parseCsv(txt);
-  }catch(e){console.warn("בעיה בטעינת CSV",e);}
+    console.log("CSV data loaded successfully.");
+    return true; // Indicate success
+  }catch(e){
+    console.warn("בעיה בטעינת CSV",e);
+    return false; // Indicate failure
+  }
 }
 
 function parseCsv(text){
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
   if(lines.length === 0) return;
   let start = 0;
-  if (/date/i.test(lines[0])) start = 1; // Skip header row if "date" is present
+  if (/date/i.test(lines[0])) start = 1;
+
+  // Clear existing map before parsing new data
+  sunriseMap.clear();
 
   for(let i=start;i<lines.length;i++){
     const cols = lines[i].split(',').map(c=>c.trim());
-    if(cols.length < 3) continue; // Ensure there are enough columns
+    if(cols.length < 3) continue;
 
-    const date = cols[0];       // YYYY-MM-DD (Gregorian date)
-    const hebrew = cols[1];     // Hebrew date string
-    let sunrise = cols[2];      // HH:MM[:SS]
+    const date = cols[0];
+    const hebrew = cols[1];
+    let sunrise = cols[2];
 
-    if(/^\d{2}:\d{2}$/.test(sunrise)) sunrise += ':00'; // Add seconds if only HH:MM
+    if(/^\d{2}:\d{2}$/.test(sunrise)) sunrise += ':00';
 
-    if(/^\d{4}-\d{2}-\d{2}$/.test(date)){ // Validate date format
+    if(/^\d{4}-\d{2}-\d{2}$/.test(date)){
       sunriseMap.set(date,{sunrise,hebrew});
     }
   }
 }
 
 function getDataForDate(dateObj){
-  const key = dateObj.toISOString().slice(0,10); // Format date to YYYY-MM-DD
+  const key = dateObj.toISOString().slice(0,10);
   return sunriseMap.get(key) || {sunrise:DEFAULT_SUNRISE, hebrew:'—'};
 }
 
@@ -177,35 +181,27 @@ function formatTime(d){
 
 function updateTick(){
   const now = new Date();
-  // Create a date object for the current day at midnight, for consistent comparisons
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const data = getDataForDate(today);
   const hebrewDate = data.hebrew;
   const [sh,sm,ss] = data.sunrise.split(':').map(n=>parseInt(n,10));
 
-  // Create a Date object for today's sunrise time
   const sunrise = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm, ss||0);
+  const switchStart = new Date(sunrise.getTime() - 3600000);
 
-  // Calculate the start time for the countdown (1 hour before sunrise)
-  const switchStart = new Date(sunrise.getTime() - 3600000); // 3600000 ms = 1 hour
-
-  // Get references to the display containers
   const defaultDisplay = document.getElementById('defaultDisplay');
   const countdownArea = document.getElementById('countdownArea');
   const mainDisplay = document.getElementById('mainDisplay');
   const subDisplay = document.getElementById('subDisplay');
 
-  // Format weekday for sub-display
   const wd = new Intl.DateTimeFormat('he-IL',{weekday:'long'}).format(now);
 
-  // --- Logic for display mode ---
   if(now >= switchStart && now < sunrise){
-    // Countdown mode: Show countdownArea, hide defaultDisplay
     defaultDisplay.style.display = 'none';
-    countdownArea.style.display = 'flex'; // Use flex for proper centering
+    countdownArea.style.display = 'flex';
 
-    const diff = Math.max(0, Math.floor((sunrise - now) / 1000)); // Time difference in seconds
+    const diff = Math.max(0, Math.floor((sunrise - now) / 1000));
     const hh = Math.floor(diff / 3600);
     const mm = Math.floor((diff % 3600) / 60);
     const ss2 = diff % 60;
@@ -215,8 +211,7 @@ function updateTick(){
     document.getElementById('sunriseSmall').textContent = z(sh)+":"+z(sm);
 
   } else {
-    // Default clock mode: Show defaultDisplay, hide countdownArea
-    defaultDisplay.style.display = 'flex'; // Use flex for proper centering
+    defaultDisplay.style.display = 'flex';
     countdownArea.style.display = 'none';
 
     mainDisplay.textContent = formatTime(now);
@@ -224,11 +219,52 @@ function updateTick(){
   }
 }
 
-// Initialize the clock: load CSV, then start updating every second
+// Function to check for new data version
+async function checkForNewVersion(){
+  try {
+    // Cache-bust the version file fetch as well
+    const res = await fetch(VERSION_FILE_PATH + '?cache=' + new Date().getTime());
+    if (!res.ok) throw new Error('Version file fetch error: ' + res.statusText);
+    const versionData = await res.json();
+    const latestVersion = versionData.last_updated || 0;
+
+    if (latestVersion > currentDataVersion) {
+      console.log(`New data version detected: ${latestVersion}. Current: ${currentDataVersion}. Reloading CSV.`);
+      const loaded = await loadCsv(); // Attempt to load new CSV
+      if (loaded) {
+        currentDataVersion = latestVersion; // Update version only if CSV loaded successfully
+        console.log("CSV data updated from new version.");
+        // No need to call updateTick explicitly here, as setInterval(updateTick, 1000) will pick up new data.
+      }
+    }
+  } catch (e) {
+    console.warn("בעיה בבדיקת גרסה או טעינת נתונים חדשים", e);
+  }
+}
+
+
 (async function init(){
-  await loadCsv();
-  updateTick(); // Initial update
-  setInterval(updateTick,1000); // Update every second
+  // Initial load of CSV
+  const loaded = await loadCsv();
+  if (loaded) {
+    // If initial CSV load is successful, get initial version from version.json
+    try {
+      const res = await fetch(VERSION_FILE_PATH + '?cache=' + new Date().getTime());
+      if (res.ok) {
+        const versionData = await res.json();
+        currentDataVersion = versionData.last_updated || 0;
+        console.log(`Initial data version set to: ${currentDataVersion}`);
+      }
+    } catch (e) {
+      console.warn("Could not retrieve initial version from version.json", e);
+    }
+  }
+
+  updateTick(); // Initial display update
+  setInterval(updateTick,1000); // Update time every second
+
+  // Start periodic version checking
+  setInterval(checkForNewVersion, VERSION_CHECK_INTERVAL_MS);
 })();
 </script>
 </body>
