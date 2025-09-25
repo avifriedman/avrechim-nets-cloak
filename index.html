@@ -29,6 +29,12 @@
     overflow: hidden; /* Prevent scrollbars if content slightly overflows */
   }
 
+  /* --- Styles for elements displaying time/numbers to ensure fixed width digits --- */
+  .fixed-width-digits {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
   /* --- Default Clock Display Styles --- */
   #defaultDisplay {
     display: flex; /* Initially set to flex for centering */
@@ -106,16 +112,16 @@
 <body>
   <!-- Container for the default clock display -->
   <div id="defaultDisplay">
-    <div id="mainDisplay">--:--:--</div>
+    <div id="mainDisplay" class="fixed-width-digits">--:--:--</div>
     <div id="subDisplay">--</div>
   </div>
 
   <!-- Container for the countdown display (initially hidden) -->
   <div id="countdownArea">
-    <div id="countdown">00:00:00</div>
+    <div id="countdown" class="fixed-width-digits">00:00:00</div>
     <div class="countdown-info">
-      <div>שעה נוכחית: <span id="nowSmall">--:--:--</span></div>
-      <div>שעת נץ: <span id="sunriseSmall">--:--</span></div>
+      <div>שעה נוכחית: <span id="nowSmall" class="fixed-width-digits">--:--:--</span></div>
+      <div>שעת נץ: <span id="sunriseSmall" class="fixed-width-digits">--:--</span></div>
     </div>
   </div>
 
