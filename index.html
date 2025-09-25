@@ -1,0 +1,44 @@
+<!-- קטע ב-JS שבו טוענים את ה-CSV -->
+<script>
+const CSV_PATH = './sunrise_times.csv'; 
+const DEFAULT_SUNRISE = '06:00:00';
+
+let sunriseMap = new Map(); // 'YYYY-MM-DD' -> { sunrise:'HH:MM:SS', hebrew:'...' }
+
+function parseCsv(text){
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+  if(lines.length === 0) return;
+  let start = 0;
+  if (/date/i.test(lines[0])) start = 1;
+  for(let i=start;i<lines.length;i++){
+    const cols = lines[i].split(',').map(c=>c.trim());
+    if(cols.length < 3) continue;
+    const date = cols[0];       // YYYY-MM-DD
+    const hebrewDate = cols[1]; // למשל "א' תשרי תשפ"ו"
+    let sunrise = cols[2];      // HH:MM[:SS]
+    if(/^\d{2}:\d{2}$/.test(sunrise)) sunrise += ':00';
+    if(/^\d{4}-\d{2}-\d{2}$/.test(date)){
+      sunriseMap.set(date,{sunrise,hebrew:hebrewDate});
+    }
+  }
+}
+
+function getDataForDate(dateObj){
+  const key = dateObj.toISOString().slice(0,10);
+  return sunriseMap.get(key) || {sunrise:DEFAULT_SUNRISE, hebrew:'—'};
+}
+
+// בשלב עדכון השעון:
+function updateTick(){
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const data = getDataForDate(today);
+  const sunriseStr = data.sunrise;
+  const hebrewDate = data.hebrew;
+
+  // מציג תאריך עברי ישירות מה-CSV:
+  document.getElementById('hebrewDate').textContent = hebrewDate || '—';
+
+  // השאר – כמו קודם (ספירה לאחור וכו')
+}
+</script>
