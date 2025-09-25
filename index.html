@@ -28,12 +28,17 @@
       font-size: 2vw;
       margin-top: 30px;
     }
+    #sunriseRow {
+      font-size: 2vw;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div id="clock">00:00:00</div>
   <div id="countdown">00:00:00</div>
   <div id="dateRow"></div>
+  <div id="sunriseRow"></div>
 
   <script>
     const CSV_PATH = './sunrise_times.csv'; 
@@ -99,6 +104,9 @@
       const weekday = days[now.getDay()];
       const gregDate = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
       document.getElementById('dateRow').textContent = `${weekday} ${hebrewDate} | ${gregDate}`;
+
+      // שורה קבועה של זמן נץ
+      document.getElementById('sunriseRow').textContent = `נץ היום: ${sunriseStr}`;
     }
 
     fetch(CSV_PATH)
