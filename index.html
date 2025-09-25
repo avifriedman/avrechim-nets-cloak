@@ -3,100 +3,103 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>שעון דיגיטלי עם ספירה לנץ</title>
+<title>שעון נץ</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
     --bg:#0b1220;
-    --panel:#07121a;
     --accent:#00ffcc;
     --muted:#9fb4c4;
-    --digital-font: 'Orbitron', sans-serif;
+    --digital-font:'Orbitron',sans-serif;
   }
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-       background:linear-gradient(180deg,#031026 0%, #071629 100%);color:var(--accent);
-       font-family:var(--digital-font);direction:rtl}
-  .card{
-    background:rgba(255,255,255,0.03);
-    border:1px solid rgba(255,255,255,0.05);
-    border-radius:16px;
-    padding:24px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.6);
+  body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#031026 0%, #071629 100%);
+    color:var(--accent);
+    font-family:var(--digital-font);
+    direction:rtl;
+  }
+  .container{
     text-align:center;
-    width:720px;
-    max-width:96%;
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
   }
-  .bigclock{font-size:72px;letter-spacing:6px;line-height:1}
-  .small{color:var(--muted);font-size:14px;margin-top:8px}
-  .meta{display:flex;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap}
-  .box{background:rgba(255,255,255,0.04);padding:10px 14px;border-radius:10px;min-width:120px}
-  .label{font-size:12px;color:var(--muted);display:block}
-  .value{font-size:18px;font-weight:700}
-  .countdown{margin-top:12px;font-size:28px;color:#fff;background:rgba(0,255,204,0.08);
-             padding:8px 12px;border-radius:8px;display:inline-block}
-  footer{margin-top:16px;color:var(--muted);font-size:12px}
-  @media(max-width:480px){.bigclock{font-size:46px}.meta{flex-direction:column}.box{width:100%}}
+  .bigclock{
+    font-size:15vw;
+    letter-spacing:6px;
+    line-height:1;
+  }
+  .small{
+    font-size:3vw;
+    color:var(--muted);
+    margin-top:1vh;
+  }
+  .countdown{
+    margin-top:2vh;
+    font-size:6vw;
+    color:#fff;
+    background:rgba(0,255,204,0.08);
+    padding:1vh 2vw;
+    border-radius:12px;
+    display:inline-block;
+  }
+  .row{
+    margin-top:2vh;
+    font-size:3vw;
+  }
 </style>
 </head>
 <body>
-  <div class="card">
+  <div class="container">
     <div class="bigclock" id="mainClock">--:--:--</div>
     <div class="small" id="weekdayHeb">--</div>
 
     <div id="countdownArea" style="display:none;">
       <div class="countdown" id="countdown">00:00:00</div>
-      <div class="small" style="margin-top:8px;">
-        זמן נץ: <span id="sunriseSmall">--:--</span> | עכשיו: <span id="nowSmall">--:--:--</span>
+      <div class="small" style="margin-top:1vh;">
+        נץ: <span id="sunriseSmall">--:--</span> | עכשיו: <span id="nowSmall">--:--:--</span>
       </div>
     </div>
 
-    <div class="meta">
-      <div class="box">
-        <span class="label">תאריך עברי</span>
-        <span class="value" id="hebrewDate">--</span>
-      </div>
-      <div class="box">
-        <span class="label">תאריך לועזי</span>
-        <span class="value" id="gregDate">--</span>
-      </div>
-      <div class="box">
-        <span class="label">יום בשבוע</span>
-        <span class="value" id="weekday">--</span>
-      </div>
-    </div>
-
-    <footer>
-      הנתונים נטענים מתוך <code>sunrise_times.csv</code> בריפו.
-    </footer>
+    <div class="row" id="hebrewDate">--</div>
+    <div class="row" id="gregDate">--</div>
   </div>
 
 <script>
-const CSV_PATH = './sunrise_times.csv';
-const DEFAULT_SUNRISE = '06:00:00';
-let sunriseMap = new Map(); // key=date -> { sunrise, hebrew }
+const CSV_PATH='./sunrise_times.csv';
+const DEFAULT_SUNRISE='06:00:00';
+let sunriseMap=new Map();
 
 function z(n,len=2){return String(n).padStart(len,'0');}
 
 async function loadCsv(){
   try{
-    const res = await fetch(CSV_PATH);
+    const res=await fetch(CSV_PATH);
     if(!res.ok) throw new Error('CSV fetch error');
-    const txt = await res.text();
+    const txt=await res.text();
     parseCsv(txt);
   }catch(e){console.warn("בעיה בטעינת CSV",e);}
 }
 
 function parseCsv(text){
-  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length);
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length);
   if(lines.length===0) return;
   let start=0;
   if(/date/i.test(lines[0])) start=1;
   for(let i=start;i<lines.length;i++){
-    const cols = lines[i].split(',').map(c=>c.trim());
+    const cols=lines[i].split(',').map(c=>c.trim());
     if(cols.length<3) continue;
-    const date=cols[0], hebrew=cols[1], sunrise=cols[2];
+    const date=cols[0],hebrew=cols[1],sunrise=cols[2];
     if(/^\d{4}-\d{2}-\d{2}$/.test(date)){
       let sr=sunrise;
       if(/^\d{2}:\d{2}$/.test(sr)) sr+=':00';
@@ -133,10 +136,9 @@ function updateTick(){
     document.getElementById('countdownArea').style.display='none';
   }
 
-  const gregFmt=new Intl.DateTimeFormat('he-IL',{year:'numeric',month:'long',day:'numeric'}).format(now);
+  const d=z(now.getDate()), m=z(now.getMonth()+1), y=now.getFullYear();
+  document.getElementById('gregDate').textContent=`${d}/${m}/${y}`;
   const wd=new Intl.DateTimeFormat('he-IL',{weekday:'long'}).format(now);
-  document.getElementById('gregDate').textContent=gregFmt;
-  document.getElementById('weekday').textContent=wd;
   document.getElementById('weekdayHeb').textContent=wd+" • "+formatTime(now);
   document.getElementById('hebrewDate').textContent=data.hebrew;
 }
