@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>שעון דיגיטלי לנץ</title>
+<title>שעון מנין אברכים</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
@@ -115,14 +115,14 @@
     <div id="countdown" class="fixed-width-digits">00:00:00</div>
     <div class="countdown-info">
       <div>שעה נוכחית: <span id="nowSmall" class="fixed-width-digits">--:--:--</span></div>
-      <div>שעת נץ: <span id="sunriseSmall" class="fixed-width-digits">--:--:--</span></div> <!-- Changed default value to include seconds -->
+      <div>שעת הנץ: <span id="sunriseSmall" class="fixed-width-digits">--:--:--</span></div>
     </div>
   </div>
 
 <script>
 const CSV_PATH = './sunrise_times.csv';
 const VERSION_FILE_PATH = './version.json';
-const DEFAULT_SUNRISE = '06:00:00';
+const DEFAULT_SUNRISE = '04:00:00';
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 let sunriseMap = new Map();
