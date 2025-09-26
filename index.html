@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>שעון מנין אברכים</title>
+<title>שעון</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
@@ -87,6 +87,7 @@
     margin: 0.5vh 0;
   }
 
+  /* --- Responsive Adjustments for Mobile Screens --- */
   @media(max-width:768px){
     #mainDisplay, #countdown {
       font-size: 20vw;
@@ -103,6 +104,19 @@
       font-size: 5.5vw;
     }
   }
+
+  /* --- NEW: Responsive Adjustments for Ultra-Wide Screens --- */
+  /* This targets screens that are at least 3 times wider than they are tall */
+  @media (min-aspect-ratio: 3/1) {
+    #mainDisplay, #countdown {
+      /* Use vh (viewport height) so the font scales with the shorter dimension */
+      font-size: 40vh;
+    }
+    #subDisplay, .countdown-info {
+      font-size: 8vh;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -122,7 +136,7 @@
 <script>
 const CSV_PATH = './sunrise_times.csv';
 const VERSION_FILE_PATH = './version.json';
-const DEFAULT_SUNRISE = '04:00:00';
+const DEFAULT_SUNRISE = '06:00:00';
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 let sunriseMap = new Map();
@@ -170,7 +184,7 @@ function parseCsv(text){
 
 function getDataForDate(dateObj){
   const year = dateObj.getFullYear();
-  const month = z(dateObj.getMonth() + 1); // getMonth() is 0-indexed
+  const month = z(dateObj.getMonth() + 1);
   const day = z(dateObj.getDate());
   const key = `${year}-${month}-${day}`;
 
@@ -186,9 +200,7 @@ function updateTick(){
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const data = getDataForDate(today);
-  console.log("Current date being checked (local):", today.getFullYear()+"-"+z(today.getMonth()+1)+"-"+z(today.getDate())); // For debugging
-  console.log("Data retrieved for today (local):", data); // For debugging
-
+  
   const hebrewDate = data.hebrew;
   const [sh,sm,ss] = data.sunrise.split(':').map(n=>parseInt(n,10));
 
@@ -213,7 +225,7 @@ function updateTick(){
 
     document.getElementById('countdown').textContent = z(hh)+":"+z(mm)+":"+z(ss2);
     document.getElementById('nowSmall').textContent = formatTime(now);
-    document.getElementById('sunriseSmall').textContent = z(sh)+":"+z(sm)+":"+z(ss); // FIX: Added seconds here
+    document.getElementById('sunriseSmall').textContent = z(sh)+":"+z(sm)+":"+z(ss || 0);
 
   } else {
     defaultDisplay.style.display = 'flex';
